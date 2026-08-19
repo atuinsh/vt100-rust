@@ -1,5 +1,5 @@
 [package]
-name = "vt100"
+name = "atuin-vt100"
 version = "0.16.2"
 authors = ["Jesse Luehrs <doy@tozt.net>"]
 edition = "2021"
@@ -13,6 +13,9 @@ keywords = ["terminal", "vt100"]
 categories = ["command-line-interface", "encoding"]
 license = "MIT"
 include = ["src/**/*", "LICENSE", "README.md", "CHANGELOG.md"]
+
+[lib]
+name = "vt100"
 
 [dependencies]
 itoa = "1.0.15"

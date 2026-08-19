@@ -18,6 +18,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
 
 [[package]]
+name = "atuin-vt100"
+version = "0.16.2"
+dependencies = [
+ "itoa",
+ "nix",
+ "quickcheck",
+ "rand 0.9.1",
+ "serde",
+ "serde_json",
+ "terminal_size",
+ "unicode-width",
+ "vte",
+]
+
+[[package]]
 name = "bitflags"
 version = "2.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -323,21 +338,6 @@ name = "unicode-width"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4a1a07cc7db3810833284e8d372ccdc6da29741639ecc70c9ec107df0fa6154c"
-
-[[package]]
-name = "vt100"
-version = "0.16.2"
-dependencies = [
- "itoa",
- "nix",
- "quickcheck",
- "rand 0.9.1",
- "serde",
- "serde_json",
- "terminal_size",
- "unicode-width",
- "vte",
-]
 
 [[package]]
 name = "vte"
