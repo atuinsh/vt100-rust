@@ -64,6 +64,18 @@ pub trait Callbacks {
     /// This callback is called when the terminal receives a OSC sequence
     /// (`\e]`) which is otherwise not implemented.
     fn unhandled_osc(&mut self, _: &mut crate::Screen, _params: &[&[u8]]) {}
+    /// Called when a row scrolls off the top of the screen due to a new row
+    /// being added at the bottom of the screen.
+    ///
+    /// `alternate_screen` indicates whether the row came from the alternate
+    /// screen.
+    #[allow(unused_variables)]
+    fn on_scroll(
+        &mut self,
+        contents: crate::RowContents<'_>,
+        alternate_screen: bool,
+    ) {
+    }
 }
 
 impl Callbacks for () {}

@@ -217,22 +217,25 @@ impl Grid {
     pub fn write_contents_formatted(
         &self,
         contents: &mut String,
+        state: &mut crate::CaptureState,
     ) -> crate::attrs::Attrs {
         crate::term::ClearAttrs.write_buf(contents);
         crate::term::ClearScreen.write_buf(contents);
 
-        let mut prev_attrs = crate::attrs::Attrs::default();
-        let mut prev_pos = Pos::default();
-        let mut wrapping = false;
+        let mut prev_attrs = state.prev_attrs.unwrap_or_default();
+        let mut prev_pos = state.prev_pos.unwrap_or_default();
+        let mut wrapping = state.wrapping;
+        let row_offset = state.row;
+
         for (i, row) in self.visible_rows().enumerate() {
             // we limit the number of cols to a u16 (see Size), so
             // visible_rows() can never return more rows than will fit
-            let i = i.try_into().unwrap();
+            let i = u16::try_from(i).unwrap();
             let (new_pos, new_attrs) = row.write_contents_formatted(
                 contents,
                 0,
                 self.size.cols,
-                i,
+                row_offset + i,
                 wrapping,
                 Some(prev_pos),
                 Some(prev_attrs),
@@ -248,6 +251,9 @@ impl Grid {
             Some(prev_attrs),
         );
 
+        state.prev_attrs = Some(prev_attrs);
+        state.prev_pos = Some(Pos::default());
+        state.row = 0;
         prev_attrs
     }
 
@@ -574,12 +580,16 @@ impl Grid {
         }
     }
 
-    pub fn scroll_up(&mut self, count: u16) {
+    pub fn scroll_up<F>(&mut self, count: u16, mut on_row: F)
+    where
+        F: FnMut(&crate::row::Row),
+    {
         for _ in 0..(count.min(self.size.rows - self.scroll_top)) {
             self.rows
                 .insert(usize::from(self.scroll_bottom) + 1, self.new_row());
             let removed = self.rows.remove(usize::from(self.scroll_top));
             if self.scrollback_len > 0 && !self.scroll_region_active() {
+                on_row(&removed);
                 self.scrollback.push_back(removed);
                 while self.scrollback.len() > self.scrollback_len {
                     self.scrollback.pop_front();
@@ -634,12 +644,15 @@ impl Grid {
         self.row_clamp_bottom(in_scroll_region);
     }
 
-    pub fn row_inc_scroll(&mut self, count: u16) -> u16 {
+    pub fn row_inc_scroll<F>(&mut self, count: u16, on_row: F) -> u16
+    where
+        F: FnMut(&crate::row::Row),
+    {
         let in_scroll_region = self.in_scroll_region();
         self.pos.row = self.pos.row.saturating_add(count);
         let lines = self.row_clamp_bottom(in_scroll_region);
         if in_scroll_region {
-            self.scroll_up(lines);
+            self.scroll_up(lines, on_row);
             lines
         } else {
             0
@@ -691,11 +704,14 @@ impl Grid {
         self.col_clamp();
     }
 
-    pub fn col_wrap(&mut self, width: u16, wrap: bool) {
+    pub fn col_wrap<F>(&mut self, width: u16, wrap: bool, on_row: F)
+    where
+        F: FnMut(&crate::row::Row),
+    {
         if self.pos.col > self.size.cols - width {
             let mut prev_pos = self.pos;
             self.pos.col = 0;
-            let scrolled = self.row_inc_scroll(1);
+            let scrolled = self.row_inc_scroll(1, on_row);
             prev_pos.row -= scrolled;
             let new_pos = self.pos;
             self.drawing_row_mut(prev_pos.row)
