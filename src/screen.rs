@@ -263,6 +263,13 @@ impl Screen {
     ///
     /// The contents will contain no cursor-moving escape sequences except
     /// `'\n'`.
+    ///
+    /// A newline will be inserted after each row except the last. Trailing
+    /// whitespace will not be trimmed from the string; a blank terminal *n*
+    /// rows tall will result in a string with *n* - 1 newlines.
+    ///
+    /// Terminal attributes should be reset before and after displaying the
+    /// returned string; it will not begin or end with a reset sequence.
     #[must_use]
     pub fn contents_formatted_basic(&self) -> String {
         let mut contents = String::new();
