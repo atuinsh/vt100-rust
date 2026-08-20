@@ -1,4 +1,10 @@
-# vt100
+# Atuin fork of [vt100]
+
+This is [Atuin]’s fork of [@doy]’s [vt100] crate.
+
+[Atuin]: https://atuin.sh
+[@doy]: https://github.com/doy
+[vt100]: https://github.com/doy/vt100
 
 This crate parses a terminal byte stream and provides an in-memory
 representation of the rendered contents.
