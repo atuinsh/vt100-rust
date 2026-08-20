@@ -221,8 +221,8 @@ impl Screen {
     /// [`contents_formatted`](Self::contents_formatted) and
     /// [`input_mode_formatted`](Self::input_mode_formatted).
     #[must_use]
-    pub fn state_formatted(&self) -> Vec<u8> {
-        let mut contents = vec![];
+    pub fn state_formatted(&self) -> String {
+        let mut contents = String::new();
         self.write_contents_formatted(&mut contents);
         self.write_input_mode_formatted(&mut contents);
         contents
@@ -233,8 +233,8 @@ impl Screen {
     /// wrapper around [`contents_diff`](Self::contents_diff) and
     /// [`input_mode_diff`](Self::input_mode_diff).
     #[must_use]
-    pub fn state_diff(&self, prev: &Self) -> Vec<u8> {
-        let mut contents = vec![];
+    pub fn state_diff(&self, prev: &Self) -> String {
+        let mut contents = String::new();
         self.write_contents_diff(&mut contents, prev);
         self.write_input_mode_diff(&mut contents, prev);
         contents
@@ -246,13 +246,13 @@ impl Screen {
     /// codes. The result will be suitable for feeding directly to a raw
     /// terminal parser, and will result in the same visual output.
     #[must_use]
-    pub fn contents_formatted(&self) -> Vec<u8> {
-        let mut contents = vec![];
+    pub fn contents_formatted(&self) -> String {
+        let mut contents = String::new();
         self.write_contents_formatted(&mut contents);
         contents
     }
 
-    fn write_contents_formatted(&self, contents: &mut Vec<u8>) {
+    fn write_contents_formatted(&self, contents: &mut String) {
         crate::term::HideCursor::new(self.hide_cursor()).write_buf(contents);
         let prev_attrs = self.grid().write_contents_formatted(contents);
         self.attrs.write_escape_code_diff(contents, &prev_attrs);
@@ -274,13 +274,13 @@ impl Screen {
         &self,
         start: u16,
         width: u16,
-    ) -> impl Iterator<Item = Vec<u8>> + '_ {
+    ) -> impl Iterator<Item = String> + '_ {
         let mut wrapping = false;
         self.grid().visible_rows().enumerate().map(move |(i, row)| {
             // number of rows in a grid is stored in a u16 (see Size), so
             // visible_rows can never return enough rows to overflow here
             let i = i.try_into().unwrap();
-            let mut contents = vec![];
+            let mut contents = String::new();
             row.write_contents_formatted(
                 &mut contents,
                 start,
@@ -297,9 +297,9 @@ impl Screen {
         })
     }
 
-    /// Returns a terminal byte stream sufficient to turn the visible contents
-    /// of the screen described by `prev` into the visible contents of the
-    /// screen described by `self`.
+    /// Returns a string containing escape sequences sufficient to turn the
+    /// visible contents of the screen described by `prev` into the visible
+    /// contents of the screen described by `self`.
     ///
     /// The result of rendering `prev.contents_formatted()` followed by
     /// `self.contents_diff(prev)` should be equivalent to the result of
@@ -308,13 +308,13 @@ impl Screen {
     /// since the diff will likely require less memory and cause less
     /// flickering than redrawing the entire screen contents.
     #[must_use]
-    pub fn contents_diff(&self, prev: &Self) -> Vec<u8> {
-        let mut contents = vec![];
+    pub fn contents_diff(&self, prev: &Self) -> String {
+        let mut contents = String::new();
         self.write_contents_diff(&mut contents, prev);
         contents
     }
 
-    fn write_contents_diff(&self, contents: &mut Vec<u8>, prev: &Self) {
+    fn write_contents_diff(&self, contents: &mut String, prev: &Self) {
         if self.hide_cursor() != prev.hide_cursor() {
             crate::term::HideCursor::new(self.hide_cursor())
                 .write_buf(contents);
@@ -327,10 +327,10 @@ impl Screen {
         self.attrs.write_escape_code_diff(contents, &prev_attrs);
     }
 
-    /// Returns a sequence of terminal byte streams sufficient to turn the
-    /// visible contents of the subset of each row from `prev` (as described
-    /// by `start` and `width`) into the visible contents of the corresponding
-    /// row subset in `self`.
+    /// Returns a sequence of strings containing escape sequences sufficient to
+    /// turn the visible contents of the subset of each row from `prev` (as
+    /// described by `start` and `width`) into the visible contents of the
+    /// corresponding row subset in `self`.
     ///
     /// You are responsible for positioning the cursor before printing each
     /// row, and the final cursor position after displaying each row is
@@ -342,7 +342,7 @@ impl Screen {
         prev: &'a Self,
         start: u16,
         width: u16,
-    ) -> impl Iterator<Item = Vec<u8>> + 'a {
+    ) -> impl Iterator<Item = String> + 'a {
         self.grid()
             .visible_rows()
             .zip(prev.grid().visible_rows())
@@ -351,7 +351,7 @@ impl Screen {
                 // number of rows in a grid is stored in a u16 (see Size), so
                 // visible_rows can never return enough rows to overflow here
                 let i = i.try_into().unwrap();
-                let mut contents = vec![];
+                let mut contents = String::new();
                 row.write_contents_diff(
                     &mut contents,
                     prev_row,
@@ -376,13 +376,13 @@ impl Screen {
     /// * bracketed paste
     /// * xterm mouse support
     #[must_use]
-    pub fn input_mode_formatted(&self) -> Vec<u8> {
-        let mut contents = vec![];
+    pub fn input_mode_formatted(&self) -> String {
+        let mut contents = String::new();
         self.write_input_mode_formatted(&mut contents);
         contents
     }
 
-    fn write_input_mode_formatted(&self, contents: &mut Vec<u8>) {
+    fn write_input_mode_formatted(&self, contents: &mut String) {
         crate::term::ApplicationKeypad::new(
             self.mode(MODE_APPLICATION_KEYPAD),
         )
@@ -409,13 +409,13 @@ impl Screen {
     /// terminal's input modes to the input modes enabled in the current
     /// terminal.
     #[must_use]
-    pub fn input_mode_diff(&self, prev: &Self) -> Vec<u8> {
-        let mut contents = vec![];
+    pub fn input_mode_diff(&self, prev: &Self) -> String {
+        let mut contents = String::new();
         self.write_input_mode_diff(&mut contents, prev);
         contents
     }
 
-    fn write_input_mode_diff(&self, contents: &mut Vec<u8>, prev: &Self) {
+    fn write_input_mode_diff(&self, contents: &mut String, prev: &Self) {
         if self.mode(MODE_APPLICATION_KEYPAD)
             != prev.mode(MODE_APPLICATION_KEYPAD)
         {
@@ -468,13 +468,13 @@ impl Screen {
     /// terminal output, since you will need to restore the terminal state
     /// without the terminal contents necessarily being the same.
     #[must_use]
-    pub fn attributes_formatted(&self) -> Vec<u8> {
-        let mut contents = vec![];
+    pub fn attributes_formatted(&self) -> String {
+        let mut contents = String::new();
         self.write_attributes_formatted(&mut contents);
         contents
     }
 
-    fn write_attributes_formatted(&self, contents: &mut Vec<u8>) {
+    fn write_attributes_formatted(&self, contents: &mut String) {
         crate::term::ClearAttrs.write_buf(contents);
         self.attrs.write_escape_code_diff(
             contents,
@@ -501,7 +501,7 @@ impl Screen {
     /// need to restore the terminal state without the terminal contents
     /// necessarily being the same.
     ///
-    /// Note that the bytes returned by this function may alter the active
+    /// Note that the string returned by this function may alter the active
     /// drawing attributes, because it may require redrawing existing cells in
     /// order to position the cursor correctly (for instance, in the case
     /// where the cursor is past the end of a row). Therefore, you should
@@ -509,13 +509,13 @@ impl Screen {
     /// processing this data, for instance by using
     /// [`attributes_formatted`](Self::attributes_formatted).
     #[must_use]
-    pub fn cursor_state_formatted(&self) -> Vec<u8> {
-        let mut contents = vec![];
+    pub fn cursor_state_formatted(&self) -> String {
+        let mut contents = String::new();
         self.write_cursor_state_formatted(&mut contents);
         contents
     }
 
-    fn write_cursor_state_formatted(&self, contents: &mut Vec<u8>) {
+    fn write_cursor_state_formatted(&self, contents: &mut String) {
         crate::term::HideCursor::new(self.hide_cursor()).write_buf(contents);
         self.grid()
             .write_cursor_position_formatted(contents, None, None);

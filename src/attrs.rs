@@ -93,7 +93,7 @@ impl Attrs {
 
     pub fn write_escape_code_diff(
         &self,
-        contents: &mut Vec<u8>,
+        contents: &mut String,
         other: &Self,
     ) {
         if self != other && self == &Self::default() {
