@@ -1,6 +1,7 @@
 # Atuin fork of [vt100]
 
-This is [Atuin]’s fork of [@doy]’s [vt100] crate.
+This is [Atuin]’s fork of [@doy]’s [vt100] crate. This fork is licensed under
+the same license as the original.
 
 [Atuin]: https://atuin.sh
 [@doy]: https://github.com/doy
