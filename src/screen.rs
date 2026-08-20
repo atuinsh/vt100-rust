@@ -258,6 +258,34 @@ impl Screen {
         self.attrs.write_escape_code_diff(contents, &prev_attrs);
     }
 
+    /// Returns the formatted visible contents of the terminal in a "basic"
+    /// format.
+    ///
+    /// The contents will contain no cursor-moving escape sequences except
+    /// `'\n'`.
+    #[must_use]
+    pub fn contents_formatted_basic(&self) -> String {
+        let mut contents = String::new();
+        // Writing to a `String` cannot fail.
+        #[allow(clippy::missing_panics_doc)]
+        self.write_contents_formatted_basic(&mut contents).unwrap();
+        contents
+    }
+
+    /// Like [`Self::contents_formatted_basic`] but writes into the provided
+    /// writer.
+    ///
+    /// # Errors
+    ///
+    /// If the writer returns an error, this method will forward that error.
+    /// Otherwise, this method will not return any errors of its own.
+    pub fn write_contents_formatted_basic(
+        &self,
+        writer: &mut impl std::fmt::Write,
+    ) -> std::fmt::Result {
+        self.grid.write_contents_formatted_basic(writer)
+    }
+
     /// Returns the formatted visible contents of the terminal by row,
     /// restricted to the given subset of columns.
     ///
