@@ -645,9 +645,9 @@ fn formatted_basic() {
         format!("foo\x1b[33;1;7mb\x1b[42;22ma\x1b[mr{}", newlines(23))
     );
 
-    // attributes carry over from the end of one row to the start of the
+    // Attributes carry over from the end of one row to the start of the
     // next, so `quux` (which has the same attributes as the `r` before it)
-    // needs no escape sequence of its own
+    // needs no escape sequence of its own.
     parser.process(b"\x1b[1;6H\x1b[35mr\r\nquux");
     assert_eq!(
         parser.screen().contents_formatted_basic(),
