@@ -12,8 +12,8 @@
 /// [`on_scroll`]: crate::Callbacks::on_scroll
 #[derive(Debug, Default, Clone)]
 pub struct BasicFormattedCaptureState {
-    pub(crate) attrs: crate::attrs::Attrs,
-    pub(crate) newline_pending: bool,
+    attrs: crate::attrs::Attrs,
+    newline_pending: bool,
 }
 
 impl BasicFormattedCaptureState {
@@ -45,7 +45,7 @@ impl RowContents<'_> {
         }
         self.0
             .write_contents_formatted_basic(writer, &mut state.attrs)?;
-        state.newline_pending = self.0.wrapped();
+        state.newline_pending = !self.0.wrapped();
         Ok(())
     }
 }
