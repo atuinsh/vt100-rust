@@ -1,5 +1,6 @@
 use crate::capture::RowContents;
 use crate::term::BufWrite as _;
+use std::num::NonZeroU16;
 use unicode_width::UnicodeWidthChar as _;
 
 const MODE_APPLICATION_KEYPAD: u8 = 0b0000_0001;
@@ -86,7 +87,9 @@ impl Screen {
     }
 
     /// Resizes the terminal.
-    pub fn set_size(&mut self, rows: u16, cols: u16) {
+    pub fn set_size(&mut self, rows: NonZeroU16, cols: NonZeroU16) {
+        let rows = rows.get();
+        let cols = cols.get();
         self.grid.set_size(crate::grid::Size { rows, cols });
         self.alternate_grid
             .set_size(crate::grid::Size { rows, cols });
