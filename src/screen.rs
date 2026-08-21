@@ -261,8 +261,8 @@ impl Screen {
     /// Returns the formatted visible contents of the terminal in a "basic"
     /// format.
     ///
-    /// The contents will contain no cursor-moving escape sequences except
-    /// `'\n'`.
+    /// The contents will contain no escape sequences except SGR sequences,
+    /// and no control characters except `'\n'`.
     ///
     /// A newline will be inserted after each row except the last. Trailing
     /// whitespace will not be trimmed from the string; a blank terminal *n*
