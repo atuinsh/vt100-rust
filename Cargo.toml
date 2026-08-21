@@ -1,13 +1,12 @@
 [package]
 name = "atuin-vt100"
 version = "0.16.2"
-authors = ["Jesse Luehrs <doy@tozt.net>"]
 edition = "2021"
 rust-version = "1.70"
 
-description = "Library for parsing terminal data"
-homepage = "https://github.com/doy/vt100-rust"
-repository = "https://github.com/doy/vt100-rust"
+description = "Fork of https://crates.io/crates/vt100"
+homepage = "https://github.com/atuinsh/vt100-rust"
+repository = "https://github.com/atuinsh/vt100-rust"
 readme = "README.md"
 keywords = ["terminal", "vt100"]
 categories = ["command-line-interface", "encoding"]
