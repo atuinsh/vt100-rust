@@ -255,15 +255,15 @@ impl Grid {
     pub fn write_contents_formatted_basic(
         &self,
         writer: &mut impl std::fmt::Write,
+        state: &mut crate::capture::BasicFormattedCaptureState,
     ) -> std::fmt::Result {
         let mut newline_pending = false;
-        let mut attrs = crate::attrs::Attrs::default();
         for row in self.visible_rows() {
             if newline_pending {
                 writer.write_char('\n')?;
             }
             newline_pending = !row.wrapped();
-            row.write_contents_formatted_basic(writer, &mut attrs)?;
+            row.write_contents_formatted_basic(writer, &mut state.attrs)?;
         }
         // We intentionally do not emit a trailing newline.
         Ok(())

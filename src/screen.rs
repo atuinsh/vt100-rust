@@ -277,12 +277,23 @@ impl Screen {
         let mut contents = String::new();
         // Writing to a `String` cannot fail.
         #[allow(clippy::missing_panics_doc)]
-        self.write_contents_formatted_basic(&mut contents).unwrap();
+        self.write_contents_formatted_basic(
+            &mut contents,
+            &mut crate::capture::BasicFormattedCaptureState::new(),
+        )
+        .unwrap();
         contents
     }
 
     /// Like [`Self::contents_formatted_basic`] but writes into the provided
     /// writer.
+    ///
+    /// If you used the [`on_scroll`](crate::Callbacks::on_scroll) callback to
+    /// write terminal data into this writer in a streaming fashion, provide
+    /// your existing [`BasicFormattedCaptureState`][state] here. Otherwise,
+    /// you can pass `&mut Default::default()`.
+    ///
+    /// [state]: crate::capture::BasicFormattedCaptureState
     ///
     /// # Errors
     ///
@@ -291,8 +302,9 @@ impl Screen {
     pub fn write_contents_formatted_basic(
         &self,
         writer: &mut impl std::fmt::Write,
+        state: &mut crate::capture::BasicFormattedCaptureState,
     ) -> std::fmt::Result {
-        self.grid.write_contents_formatted_basic(writer)
+        self.grid.write_contents_formatted_basic(writer, state)
     }
 
     /// Returns the formatted visible contents of the terminal by row,
