@@ -49,7 +49,7 @@
 
 mod attrs;
 mod callbacks;
-mod capture;
+pub mod capture;
 mod cell;
 mod grid;
 mod parser;
@@ -60,7 +60,6 @@ mod term;
 
 pub use attrs::Color;
 pub use callbacks::Callbacks;
-pub use capture::{CaptureState, RowContents};
 pub use cell::Cell;
 pub use parser::Parser;
 pub use screen::{MouseProtocolEncoding, MouseProtocolMode, Screen};

@@ -1,5 +1,5 @@
+use crate::capture::RowContents;
 use crate::term::BufWrite as _;
-use crate::{CaptureState, RowContents};
 use unicode_width::UnicodeWidthChar as _;
 
 const MODE_APPLICATION_KEYPAD: u8 = 0b0000_0001;
@@ -224,10 +224,7 @@ impl Screen {
     #[must_use]
     pub fn state_formatted(&self) -> String {
         let mut contents = String::new();
-        self.write_contents_formatted(
-            &mut contents,
-            &mut CaptureState::new(),
-        );
+        self.write_contents_formatted(&mut contents);
         self.write_input_mode_formatted(&mut contents);
         contents
     }
@@ -252,29 +249,14 @@ impl Screen {
     #[must_use]
     pub fn contents_formatted(&self) -> String {
         let mut contents = String::new();
-        self.write_contents_formatted(
-            &mut contents,
-            &mut CaptureState::new(),
-        );
+        self.write_contents_formatted(&mut contents);
         contents
     }
 
-    /// Writes the formatted visible contents of the terminal to a buffer.
-    ///
-    /// If appending to an in-progress capture (for example, if you're calling
-    /// [`RowContents::write_formatted`] in the [`on_scroll`] callback), pass
-    /// your existing [`CaptureState`] here. Otherwise, you can pass
-    /// <code>&mut [CaptureState::new()]</code>.
-    ///
-    /// [`on_scroll`]: crate::Callbacks::on_scroll
-    pub fn write_contents_formatted(
-        &self,
-        buffer: &mut String,
-        state: &mut CaptureState,
-    ) {
-        crate::term::HideCursor::new(self.hide_cursor()).write_buf(buffer);
-        let prev_attrs = self.grid().write_contents_formatted(buffer, state);
-        self.attrs.write_escape_code_diff(buffer, &prev_attrs);
+    fn write_contents_formatted(&self, contents: &mut String) {
+        crate::term::HideCursor::new(self.hide_cursor()).write_buf(contents);
+        let prev_attrs = self.grid().write_contents_formatted(contents);
+        self.attrs.write_escape_code_diff(contents, &prev_attrs);
     }
 
     /// Returns the formatted visible contents of the terminal in a "basic"

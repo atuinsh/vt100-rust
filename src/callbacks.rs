@@ -72,7 +72,7 @@ pub trait Callbacks {
     #[allow(unused_variables)]
     fn on_scroll(
         &mut self,
-        contents: crate::RowContents<'_>,
+        contents: crate::capture::RowContents<'_>,
         alternate_screen: bool,
     ) {
     }

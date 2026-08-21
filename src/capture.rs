@@ -1,21 +1,22 @@
-/// Represents the state of an in-progress capture of formatted terminal
-/// output.
+//! Types related to in-progress capturing of terminal data.
+//!
+//! See [`crate::Callbacks::on_scroll`].
+
+/// Represents the state of an in-progress capture of "basic formatted"
+/// terminal data.
 ///
 /// This type is needed if you're capturing terminal data in a streaming
-/// fashion using [`RowContents::write_formatted`] in the [`on_scroll`]
+/// fashion using [`RowContents::write_formatted_basic`] in the [`on_scroll`]
 /// callback.
 ///
 /// [`on_scroll`]: crate::Callbacks::on_scroll
 #[derive(Debug, Default, Clone)]
-pub struct CaptureState {
-    pub(crate) prev_pos: Option<crate::grid::Pos>,
-    pub(crate) prev_attrs: Option<crate::attrs::Attrs>,
-    pub(crate) row: u16,
-    pub(crate) wrapping: bool,
+pub struct BasicFormattedCaptureState {
+    pub(crate) attrs: crate::attrs::Attrs,
 }
 
-impl CaptureState {
-    /// Creates a new [`CaptureState`].
+impl BasicFormattedCaptureState {
+    /// Creates a new [`BasicFormattedCaptureState`].
     #[must_use]
     pub fn new() -> Self {
         Self::default()
@@ -26,24 +27,19 @@ impl CaptureState {
 pub struct RowContents<'a>(pub(crate) &'a crate::row::Row);
 
 impl RowContents<'_> {
-    /// Writes the contents of the row to the provided buffer.
-    pub fn write_formatted(
+    /// Writes the contents of the row to the provided buffer, in the same
+    /// format as [`crate::Screen::contents_formatted_basic`].
+    ///
+    /// # Errors
+    ///
+    /// If the writer returns an error, this method will forward that error.
+    /// Otherwise, this method will not return any errors of its own.
+    pub fn write_formatted_basic(
         &self,
-        buffer: &mut String,
-        state: &mut CaptureState,
-    ) {
-        let (prev_pos, prev_attrs) = self.0.write_contents_formatted(
-            buffer,
-            0,
-            u16::MAX,
-            state.row,
-            state.wrapping,
-            state.prev_pos,
-            state.prev_attrs,
-        );
-        state.prev_pos = Some(prev_pos);
-        state.prev_attrs = Some(prev_attrs);
-        state.row += 1;
-        state.wrapping = self.0.wrapped();
+        writer: &mut impl std::fmt::Write,
+        state: &mut BasicFormattedCaptureState,
+    ) -> std::fmt::Result {
+        self.0
+            .write_contents_formatted_basic(writer, &mut state.attrs)
     }
 }

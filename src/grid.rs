@@ -217,25 +217,23 @@ impl Grid {
     pub fn write_contents_formatted(
         &self,
         contents: &mut String,
-        state: &mut crate::CaptureState,
     ) -> crate::attrs::Attrs {
         crate::term::ClearAttrs.write_buf(contents);
         crate::term::ClearScreen.write_buf(contents);
 
-        let mut prev_attrs = state.prev_attrs.unwrap_or_default();
-        let mut prev_pos = state.prev_pos.unwrap_or_default();
-        let mut wrapping = state.wrapping;
-        let row_offset = state.row;
+        let mut prev_attrs = crate::attrs::Attrs::default();
+        let mut prev_pos = Pos::default();
+        let mut wrapping = false;
 
         for (i, row) in self.visible_rows().enumerate() {
             // we limit the number of cols to a u16 (see Size), so
             // visible_rows() can never return more rows than will fit
-            let i = u16::try_from(i).unwrap();
+            let i = i.try_into().unwrap();
             let (new_pos, new_attrs) = row.write_contents_formatted(
                 contents,
                 0,
                 self.size.cols,
-                row_offset + i,
+                i,
                 wrapping,
                 Some(prev_pos),
                 Some(prev_attrs),
@@ -251,9 +249,6 @@ impl Grid {
             Some(prev_attrs),
         );
 
-        state.prev_attrs = Some(prev_attrs);
-        state.prev_pos = Some(Pos::default());
-        state.row = 0;
         prev_attrs
     }
 
