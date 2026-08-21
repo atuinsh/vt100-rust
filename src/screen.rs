@@ -264,9 +264,10 @@ impl Screen {
     /// The contents will contain no escape sequences except SGR sequences,
     /// and no control characters except `'\n'`.
     ///
-    /// A newline will be inserted after each row except the last. Trailing
-    /// whitespace will not be trimmed from the string; a blank terminal *n*
-    /// rows tall will result in a string with *n* - 1 newlines.
+    /// A newline will be inserted after each row that does not wrap onto the
+    /// next line, except the last. Trailing whitespace will not be trimmed
+    /// from the string; a blank terminal *n* rows tall will result in a string
+    /// with *n* - 1 newlines.
     ///
     /// Terminal attributes should be reset before and after displaying the
     /// returned string; it will not begin or end with a reset sequence.
