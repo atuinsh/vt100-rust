@@ -257,16 +257,9 @@ impl Grid {
         writer: &mut impl std::fmt::Write,
         state: &mut crate::capture::BasicFormattedCaptureState,
     ) -> std::fmt::Result {
-        let mut newline_pending = false;
-        for row in self.visible_rows() {
-            if newline_pending {
-                writer.write_char('\n')?;
-            }
-            newline_pending = !row.wrapped();
-            row.write_contents_formatted_basic(writer, &mut state.attrs)?;
-        }
-        // We intentionally do not emit a trailing newline.
-        Ok(())
+        self.visible_rows()
+            .map(crate::capture::RowContents)
+            .try_for_each(|row| row.write_formatted_basic(writer, state))
     }
 
     pub fn write_contents_diff(
@@ -583,8 +576,8 @@ impl Grid {
             self.rows
                 .insert(usize::from(self.scroll_bottom) + 1, self.new_row());
             let removed = self.rows.remove(usize::from(self.scroll_top));
+            on_row(&removed);
             if self.scrollback_len > 0 && !self.scroll_region_active() {
-                on_row(&removed);
                 self.scrollback.push_back(removed);
                 while self.scrollback.len() > self.scrollback_len {
                     self.scrollback.pop_front();

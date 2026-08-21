@@ -13,6 +13,7 @@
 #[derive(Debug, Default, Clone)]
 pub struct BasicFormattedCaptureState {
     pub(crate) attrs: crate::attrs::Attrs,
+    pub(crate) newline_pending: bool,
 }
 
 impl BasicFormattedCaptureState {
@@ -39,7 +40,12 @@ impl RowContents<'_> {
         writer: &mut impl std::fmt::Write,
         state: &mut BasicFormattedCaptureState,
     ) -> std::fmt::Result {
+        if state.newline_pending {
+            writer.write_char('\n')?;
+        }
         self.0
-            .write_contents_formatted_basic(writer, &mut state.attrs)
+            .write_contents_formatted_basic(writer, &mut state.attrs)?;
+        state.newline_pending = self.0.wrapped();
+        Ok(())
     }
 }
