@@ -14,7 +14,7 @@ fn origin_mode() {
 
 #[test]
 fn scrollback() {
-    let mut parser = vt100::Parser::new(24, 80, 10);
+    let mut parser = helpers::new(24, 80, 10);
 
     parser.process(b"1\r\n2\r\n3\r\n4\r\n5\r\n6\r\n7\r\n8\r\n9\r\n10\r\n11\r\n12\r\n13\r\n14\r\n15\r\n16\r\n17\r\n18\r\n19\r\n20\r\n21\r\n22\r\n23\r\n24");
     assert_eq!(
@@ -178,7 +178,7 @@ fn edge_of_screen() {
 
 #[test]
 fn scrollback_larger_than_rows() {
-    let mut parser = vt100::Parser::new(3, 20, 10);
+    let mut parser = helpers::new(3, 20, 10);
 
     parser.process(gen_nums(1..=10, "\r\n").as_bytes());
 

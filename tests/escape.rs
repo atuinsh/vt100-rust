@@ -27,8 +27,7 @@ fn vb() {
         }
     }
 
-    let mut parser =
-        vt100::Parser::new_with_callbacks(24, 80, 0, State { vb: 0 });
+    let mut parser = helpers::new_with_callbacks(24, 80, 0, State { vb: 0 });
     assert_eq!(parser.callbacks().vb, 0);
 
     let screen = parser.screen().clone();
@@ -64,13 +63,13 @@ fn decsc() {
 
 #[test]
 fn decsc_resize() {
-    let mut parser = vt100::Parser::new(24, 80, 0);
+    let mut parser = helpers::new(24, 80, 0);
     parser.process(b"foo\x1b[20;70Hbar\x1b7");
     assert_eq!(parser.screen().contents(), "foo\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n                                                                     bar");
     assert_eq!(parser.screen().cursor_position(), (19, 72));
     parser.process(b"\x1b[H");
     assert_eq!(parser.screen().cursor_position(), (0, 0));
-    parser.screen_mut().set_size(15, 60);
+    helpers::set_size(parser.screen_mut(), 15, 60);
     assert_eq!(parser.screen().contents(), "foo");
     assert_eq!(parser.screen().cursor_position(), (0, 0));
     parser.process(b"y\x1b8z");
