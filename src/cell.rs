@@ -14,7 +14,11 @@ pub struct Cell {
     len: u8,
     attrs: crate::attrs::Attrs,
 }
-const _: () = assert!(std::mem::size_of::<Cell>() == 32);
+
+#[test]
+fn size() {
+    assert_eq!(std::mem::size_of::<Cell>(), 32);
+}
 
 impl PartialEq<Self> for Cell {
     fn eq(&self, other: &Self) -> bool {
@@ -30,11 +34,11 @@ impl PartialEq<Self> for Cell {
 }
 
 impl Cell {
-    pub(crate) fn new() -> Self {
+    pub(crate) const fn new() -> Self {
         Self {
-            contents: Default::default(),
+            contents: [0; CONTENT_BYTES],
             len: 0,
-            attrs: crate::attrs::Attrs::default(),
+            attrs: crate::attrs::Attrs::new(),
         }
     }
 
