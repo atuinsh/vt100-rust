@@ -619,6 +619,9 @@ impl Grid {
     }
 
     pub fn scroll_down(&mut self, count: u16) {
+        if count == 0 {
+            return;
+        }
         let between = &mut self.rows
             [usize::from(self.scroll_top)..=usize::from(self.scroll_bottom)];
         let num_between = between.len();
@@ -627,10 +630,8 @@ impl Grid {
         for row in &mut between[..num_removed] {
             row.reset();
         }
-        if count > 0 {
-            // self.scroll_bottom is maintained to always be a valid row
-            self.rows[usize::from(self.scroll_bottom)].wrap(false);
-        }
+        // self.scroll_bottom is maintained to always be a valid row
+        self.rows[usize::from(self.scroll_bottom)].wrap(false);
     }
 
     pub fn set_scroll_region(&mut self, top: u16, bottom: u16) {
