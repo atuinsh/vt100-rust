@@ -1,3 +1,11 @@
+//! This is [Atuin]'s fork of [@doy]'s [vt100] crate. For more information,
+//! please see [the repository][repo].
+//!
+//! [Atuin]: https://atuin.sh
+//! [@doy]: https://github.com/doy
+//! [vt100]: https://github.com/doy/vt100
+//! [repo]: https://github.com/atuinsh/vt100-rust
+//!
 //! This crate parses a terminal byte stream and provides an in-memory
 //! representation of the rendered contents.
 //!
