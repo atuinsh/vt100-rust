@@ -1,5 +1,60 @@
 # Changelog
 
+## [0.17.0] - 2026-08-25
+
+This is the first release of atuin-vt100, [Atuin]'s fork of [@doy]'s [vt100]
+crate.
+
+[Atuin]: https://atuin.sh
+[@doy]: https://github.com/doy
+[vt100]: https://github.com/doy/vt100
+
+### Fixed
+
+* Fixed panics with screens that are smaller than 2 rows tall or 2 columns
+  wide. Note that if a wide character is written to a screen that is only one
+  column wide, it will be silently discarded.
+* Fixed panics when a screen is resized such that the last column is half of
+  a wide character. Now the wide character is discarded.
+* Changed handling of IL and DL sequences when the cursor is outside the scroll
+  region. These operations are now no-ops in that case, which is the
+  spec-compliant behavior.
+* Fixed issue where one-row scroll regions could cause unrelated rows to be
+  marked as wrapped or not wrapped.
+* Improved the performance of various operations, especially escape sequences
+  that insert/delete multiple rows or characters.
+
+### Changed
+
+* The following methods of `Screen` now return/yield strings rather than byte
+  vectors:
+
+  * `attributes_formatted`
+  * `contents_diff`
+  * `contents_formatted`
+  * `cursor_state_formatted`
+  * `input_mode_diff`
+  * `input_mode_formatted`
+  * `rows_diff`
+  * `rows_formatted`
+  * `state_diff`
+  * `state_formatted`
+
+  The byte vectors were already always UTF-8.
+
+### Added
+
+* `Screen::contents_formatted_basic`, which is like
+  `Screen::contents_formatted`, but restricts escape sequences to SGR escapes
+  only, and control characters to `'\n'`.
+* `Screen::write_contents_formatted_basic`, like
+  `Screen::contents_formatted_basic` but writes to any type implementing
+  `std::fmt::Write` instead of returning a `String`.
+* `Callbacks::on_scroll`, called when a row scrolls off the top of the screen.
+  This enables capturing terminal output in a streaming fashion. Currently this
+  can only be used to obtain the row contents in the "basic formatted" style
+  (the same returned by `Screen::contents_formatted`).
+
 ## [0.16.2] - 2025-07-11
 
 ### Fixed
