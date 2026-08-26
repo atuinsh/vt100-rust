@@ -726,28 +726,26 @@ impl Grid {
         self.col_clamp();
     }
 
-    pub fn col_wrap<F>(&mut self, width: u16, wrap: bool, on_row: F)
+    pub fn col_wrap<F>(&mut self, wrap: bool, on_row: F)
     where
         F: FnMut(&crate::row::Row),
     {
-        if self.pos.col > self.size.cols - width {
-            self.pos.col = 0;
-            let prev_row = self.pos.row;
-            // Eagerly set the wrapped flag. If `row_inc_scroll` scrolls the
-            // row off the top of the screen, we can no longer access the row
-            // to set its wrapped flag, so we need to set it now. If we don't
-            // actually end up wrapping, we'll correct the wrapped flag to
-            // false later. The `unwrap` is ok because we assume `self.pos.row`
-            // is always valid.
-            self.drawing_row_mut(prev_row).unwrap().wrap(wrap);
-            let scrolled = self.row_inc_scroll(1, on_row);
-            if scrolled == 0 && self.pos.row == prev_row {
-                // We didn't actually wrap: we didn't scroll and the cursor
-                // didn't change rows, so correct the wrapped flag to false.
-                // The `unwrap` is ok because we assume `self.pos.row` is
-                // always valid.
-                self.drawing_row_mut(prev_row).unwrap().wrap(false);
-            }
+        self.pos.col = 0;
+        let prev_row = self.pos.row;
+        // Eagerly set the wrapped flag. If `row_inc_scroll` scrolls the
+        // row off the top of the screen, we can no longer access the row
+        // to set its wrapped flag, so we need to set it now. If we don't
+        // actually end up wrapping, we'll correct the wrapped flag to
+        // false later. The `unwrap` is ok because we assume `self.pos.row`
+        // is always valid.
+        self.drawing_row_mut(prev_row).unwrap().wrap(wrap);
+        let scrolled = self.row_inc_scroll(1, on_row);
+        if scrolled == 0 && self.pos.row == prev_row {
+            // We didn't actually wrap: we didn't scroll and the cursor
+            // didn't change rows, so correct the wrapped flag to false.
+            // The `unwrap` is ok because we assume `self.pos.row` is
+            // always valid.
+            self.drawing_row_mut(prev_row).unwrap().wrap(false);
         }
     }
 
