@@ -56,7 +56,7 @@ crate.
 * `Callbacks::on_scroll`, called when a row scrolls off the top of the screen.
   This enables capturing terminal output in a streaming fashion. Currently this
   can only be used to obtain the row contents in the "basic formatted" style
-  (the same returned by `Screen::contents_formatted`).
+  (the same returned by `Screen::contents_formatted_basic`).
 * `Parser::DEFAULT_ROWS` and `Parser::DEFAULT_COLS`, set to 24 and 80 (the same
   already used by `Parser::default`). These have type `NonZeroU16`.
 
