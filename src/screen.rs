@@ -760,6 +760,8 @@ impl Screen {
     ///
     /// Finally, you should call [`Self::draw_text`], passing in `c` and
     /// [`PreparedText::width`].
+    ///
+    /// [col_wrap]: crate::grid::Grid::col_wrap
     fn prepare_text(&self, c: char) -> Option<PreparedText> {
         let pos = self.grid().pos();
         let size = self.grid().size();
