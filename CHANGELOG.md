@@ -26,6 +26,9 @@ crate.
 
 ### Changed
 
+* `Parser::new` and `Screen::set_size` now take `NonZeroU16`s instead of
+  `u16`s. Passing 0 for `rows` or `cols` was not supported and resulted in
+  panics.
 * The following methods of `Screen` now return/yield strings rather than byte
   vectors:
 
@@ -54,6 +57,8 @@ crate.
   This enables capturing terminal output in a streaming fashion. Currently this
   can only be used to obtain the row contents in the "basic formatted" style
   (the same returned by `Screen::contents_formatted`).
+* `Parser::DEFAULT_ROWS` and `Parser::DEFAULT_COLS`, set to 24 and 80 (the same
+  already used by `Parser::default`). These have type `NonZeroU16`.
 
 ## [0.16.2] - 2025-07-11
 
