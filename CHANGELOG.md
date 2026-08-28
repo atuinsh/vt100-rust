@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.17.1] - 2026-08-28
+
+### Fixed
+
+* `Screen::contents_formatted_basic` and
+  `Screen::write_contents_formatted_basic` now use the alternate screen when
+  the alternate screen is active.
+
 ## [0.17.0] - 2026-08-25
 
 This is the first release of atuin-vt100, [Atuin]'s fork of [@doy]'s [vt100]
