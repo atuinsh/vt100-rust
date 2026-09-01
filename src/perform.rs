@@ -106,11 +106,11 @@ impl<CB: crate::Callbacks> vte::Perform for crate::screen::WrappedScreen<CB> {
                         let rows = params_iter
                             .next()
                             .and_then(|p| p.first().copied())
-                            .unwrap_or(screen_rows.get());
+                            .unwrap_or_else(|| screen_rows.get());
                         let cols = params_iter
                             .next()
                             .and_then(|p| p.first().copied())
-                            .unwrap_or(screen_cols.get());
+                            .unwrap_or_else(|| screen_cols.get());
                         self.callbacks.resize(&mut self.screen, (rows, cols));
                     } else {
                         self.callbacks.unhandled_csi(
