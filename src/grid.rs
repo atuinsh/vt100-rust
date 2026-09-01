@@ -1,4 +1,5 @@
 use crate::term::BufWrite as _;
+use std::num::NonZeroU16;
 
 #[derive(Clone, Debug)]
 pub struct Grid {
@@ -23,7 +24,7 @@ impl Grid {
             saved_pos: Pos::default(),
             rows: Vec::new(),
             scroll_top: 0,
-            scroll_bottom: size.rows - 1,
+            scroll_bottom: size.rows() - 1,
             origin_mode: false,
             saved_origin_mode: false,
             scrollback: std::collections::VecDeque::new(),
@@ -34,8 +35,8 @@ impl Grid {
 
     pub fn allocate_rows(&mut self) {
         if self.rows.is_empty() {
-            self.rows.resize_with(usize::from(self.size.rows), || {
-                crate::row::Row::new(self.size.cols)
+            self.rows.resize_with(usize::from(self.size.rows()), || {
+                crate::row::Row::new(self.size.cols())
             });
         }
     }
@@ -47,7 +48,7 @@ impl Grid {
             row.reset();
         }
         self.scroll_top = 0;
-        self.scroll_bottom = self.size.rows - 1;
+        self.scroll_bottom = self.size.rows() - 1;
         self.origin_mode = false;
         self.saved_origin_mode = false;
     }
@@ -63,20 +64,20 @@ impl Grid {
             }
         }
 
-        if self.scroll_bottom == self.size.rows - 1 {
-            self.scroll_bottom = size.rows - 1;
+        if self.scroll_bottom == self.size.rows() - 1 {
+            self.scroll_bottom = size.rows() - 1;
         }
 
         self.size = size;
         for row in &mut self.rows {
-            row.resize(size.cols, crate::Cell::new());
+            row.resize(size.cols(), crate::Cell::new());
         }
-        self.rows.resize_with(usize::from(size.rows), || {
-            crate::row::Row::new(self.size.cols)
+        self.rows.resize_with(usize::from(size.rows()), || {
+            crate::row::Row::new(self.size.cols())
         });
 
-        if self.scroll_bottom >= size.rows {
-            self.scroll_bottom = size.rows - 1;
+        if self.scroll_bottom >= size.rows() {
+            self.scroll_bottom = size.rows() - 1;
         }
         if self.scroll_bottom < self.scroll_top {
             self.scroll_top = 0;
@@ -86,11 +87,11 @@ impl Grid {
         self.row_clamp_bottom(false);
         self.col_clamp();
 
-        if self.saved_pos.row > self.size.rows - 1 {
-            self.saved_pos.row = self.size.rows - 1;
+        if self.saved_pos.row > self.size.rows() - 1 {
+            self.saved_pos.row = self.size.rows() - 1;
         }
-        if self.saved_pos.col > self.size.cols - 1 {
-            self.saved_pos.col = self.size.cols - 1;
+        if self.saved_pos.col > self.size.cols() - 1 {
+            self.saved_pos.col = self.size.cols() - 1;
         }
     }
 
@@ -197,7 +198,7 @@ impl Grid {
     pub fn write_contents(&self, contents: &mut String) {
         let mut wrapping = false;
         for row in self.visible_rows() {
-            row.write_contents(contents, 0, self.size.cols, wrapping);
+            row.write_contents(contents, 0, self.size.cols(), wrapping);
             if !row.wrapped() {
                 contents.push('\n');
             }
@@ -227,7 +228,7 @@ impl Grid {
             let (new_pos, new_attrs) = row.write_contents_formatted(
                 contents,
                 0,
-                self.size.cols,
+                self.size.cols(),
                 i,
                 wrapping,
                 Some(prev_pos),
@@ -276,7 +277,7 @@ impl Grid {
                 contents,
                 prev_row,
                 0,
-                self.size.cols,
+                self.size.cols(),
                 i,
                 wrapping,
                 prev_wrapping,
@@ -310,10 +311,10 @@ impl Grid {
         // drawn. it is only possible for the cursor to have this kind of
         // position after drawing a character though, so if we end in this
         // position, we need to redraw the character at the end of the row.
-        if prev_pos != Some(self.pos) && self.pos.col >= self.size.cols {
+        if prev_pos != Some(self.pos) && self.pos.col >= self.size.cols() {
             let mut pos = Pos {
                 row: self.pos.row,
-                col: self.size.cols - 1,
+                col: self.size.cols() - 1,
             };
             if self
                 .drawing_cell(pos)
@@ -322,7 +323,7 @@ impl Grid {
                 .unwrap()
                 .is_wide_continuation()
             {
-                pos.col = self.size.cols - 2;
+                pos.col = self.size.cols() - 2;
             }
             let cell =
                 // we assume self.pos.row is always valid, and self.size.cols
@@ -354,7 +355,7 @@ impl Grid {
                 let mut found = false;
                 for i in (0..self.pos.row).rev() {
                     pos.row = i;
-                    pos.col = self.size.cols - 1;
+                    pos.col = self.size.cols() - 1;
                     if self
                         .drawing_cell(pos)
                         // i is always less than self.pos.row, which we assume
@@ -363,7 +364,7 @@ impl Grid {
                         .unwrap()
                         .is_wide_continuation()
                     {
-                        pos.col = self.size.cols - 2;
+                        pos.col = self.size.cols() - 2;
                     }
                     let cell = self
                         .drawing_cell(pos)
@@ -379,7 +380,7 @@ impl Grid {
                     if cell.has_contents() {
                         if let Some(prev_pos) = prev_pos {
                             if prev_pos.row != i
-                                || prev_pos.col < self.size.cols
+                                || prev_pos.col < self.size.cols()
                             {
                                 crate::term::MoveFromTo::new(prev_pos, pos)
                                     .write_buf(contents);
@@ -422,7 +423,7 @@ impl Grid {
                 if !found {
                     pos = Pos {
                         row: self.pos.row,
-                        col: self.size.cols - 1,
+                        col: self.size.cols() - 1,
                     };
                     if let Some(prev_pos) = prev_pos {
                         crate::term::MoveFromTo::new(prev_pos, pos)
@@ -489,7 +490,7 @@ impl Grid {
         let size = self.size;
         let pos = self.pos;
         let row = self.current_row_mut();
-        for col in pos.col..size.cols {
+        for col in pos.col..size.cols() {
             row.erase(col, attrs);
         }
     }
@@ -498,7 +499,7 @@ impl Grid {
         let size = self.size;
         let pos = self.pos;
         let row = self.current_row_mut();
-        for col in 0..=pos.col.min(size.cols - 1) {
+        for col in 0..=pos.col.min(size.cols() - 1) {
             row.erase(col, attrs);
         }
     }
@@ -513,14 +514,15 @@ impl Grid {
         let size = self.size;
         let pos = self.pos;
         let row = self.current_row_mut();
-        row.remove(pos.col..pos.col.saturating_add(count).min(size.cols));
+        row.remove(pos.col..pos.col.saturating_add(count).min(size.cols()));
     }
 
     pub fn erase_cells(&mut self, count: u16, attrs: crate::attrs::Attrs) {
         let size = self.size;
         let pos = self.pos;
         let row = self.current_row_mut();
-        for col in pos.col..((pos.col.saturating_add(count)).min(size.cols)) {
+        for col in pos.col..((pos.col.saturating_add(count)).min(size.cols()))
+        {
             row.erase(col, attrs);
         }
     }
@@ -570,7 +572,7 @@ impl Grid {
 
         // Number of to-be-removed rows.
         let num_removed = count.min(num_between);
-        let new_row = || crate::row::Row::new(self.size.cols);
+        let new_row = || crate::row::Row::new(self.size.cols());
 
         if scrollback_enabled && self.scrollback_len > 0 {
             // Number of rows that will be pushed to the scrollback.
@@ -635,13 +637,13 @@ impl Grid {
     }
 
     pub fn set_scroll_region(&mut self, top: u16, bottom: u16) {
-        let bottom = bottom.min(self.size().rows - 1);
+        let bottom = bottom.min(self.size().rows() - 1);
         if top < bottom {
             self.scroll_top = top;
             self.scroll_bottom = bottom;
         } else {
             self.scroll_top = 0;
-            self.scroll_bottom = self.size().rows - 1;
+            self.scroll_bottom = self.size().rows() - 1;
         }
         self.pos.row = self.scroll_top;
         self.pos.col = 0;
@@ -652,7 +654,7 @@ impl Grid {
     }
 
     fn scroll_region_active(&self) -> bool {
-        self.scroll_top != 0 || self.scroll_bottom != self.size.rows - 1
+        self.scroll_top != 0 || self.scroll_bottom != self.size.rows() - 1
     }
 
     pub fn set_origin_mode(&mut self, mode: bool) {
@@ -763,7 +765,7 @@ impl Grid {
         let bottom = if limit_to_scroll_region {
             self.scroll_bottom
         } else {
-            self.size.rows - 1
+            self.size.rows() - 1
         };
         if self.pos.row > bottom {
             let rows = self.pos.row - bottom;
@@ -775,22 +777,32 @@ impl Grid {
     }
 
     fn row_clamp(&mut self) {
-        if self.pos.row > self.size.rows - 1 {
-            self.pos.row = self.size.rows - 1;
+        if self.pos.row > self.size.rows() - 1 {
+            self.pos.row = self.size.rows() - 1;
         }
     }
 
     fn col_clamp(&mut self) {
-        if self.pos.col > self.size.cols - 1 {
-            self.pos.col = self.size.cols - 1;
+        if self.pos.col > self.size.cols() - 1 {
+            self.pos.col = self.size.cols() - 1;
         }
     }
 }
 
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Size {
-    pub rows: u16,
-    pub cols: u16,
+    pub rows: NonZeroU16,
+    pub cols: NonZeroU16,
+}
+
+impl Size {
+    pub fn rows(self) -> u16 {
+        self.rows.get()
+    }
+
+    pub fn cols(self) -> u16 {
+        self.cols.get()
+    }
 }
 
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]

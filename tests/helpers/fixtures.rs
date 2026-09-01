@@ -92,8 +92,8 @@ impl FixtureScreen {
         let empty_cell = empty_screen.cell(0, 0).unwrap();
         let mut cells = std::collections::BTreeMap::new();
         let (rows, cols) = screen.size();
-        for row in 0..rows {
-            for col in 0..cols {
+        for row in 0..rows.get() {
+            for col in 0..cols.get() {
                 let cell = screen.cell(row, col).unwrap();
                 if cell != empty_cell {
                     cells.insert(
@@ -271,8 +271,8 @@ fn assert_produces(input: &[u8], expected: &FixtureScreen) {
     );
 
     let (rows, cols) = parser.screen().size();
-    for row in 0..rows {
-        for col in 0..cols {
+    for row in 0..rows.get() {
+        for col in 0..cols.get() {
             let expected_cell = expected
                 .cells
                 .get(&format!("{row},{col}"))
