@@ -88,8 +88,6 @@ impl Screen {
 
     /// Resizes the terminal.
     pub fn set_size(&mut self, rows: NonZeroU16, cols: NonZeroU16) {
-        let rows = rows.get();
-        let cols = cols.get();
         self.grid.set_size(crate::grid::Size { rows, cols });
         self.alternate_grid
             .set_size(crate::grid::Size { rows, cols });
@@ -99,7 +97,7 @@ impl Screen {
     ///
     /// The return value will be (rows, cols).
     #[must_use]
-    pub fn size(&self) -> (u16, u16) {
+    pub fn size(&self) -> (NonZeroU16, NonZeroU16) {
         let size = self.grid().size();
         (size.rows, size.cols)
     }
@@ -178,6 +176,7 @@ impl Screen {
         match start_row.cmp(&end_row) {
             std::cmp::Ordering::Less => {
                 let (_, cols) = self.size();
+                let cols = cols.get();
                 let mut contents = String::new();
                 for (i, row) in self
                     .grid()
@@ -342,7 +341,7 @@ impl Screen {
                 None,
                 None,
             );
-            if start == 0 && width == self.grid.size().cols {
+            if start == 0 && width == self.grid.size().cols() {
                 wrapping = row.wrapped();
             }
             contents
@@ -778,7 +777,7 @@ impl Screen {
 
         // if the character is wider than the screen, we can't draw it, so
         // just ignore it
-        if width > size.cols {
+        if width > size.cols() {
             return None;
         }
 
@@ -791,13 +790,13 @@ impl Screen {
         // (xterm handles this by introducing the concept of triple width
         // cells, which i really don't want to do).
         let mut wrap = false;
-        let col_wrap = pos.col > size.cols - width;
+        let col_wrap = pos.col > size.cols() - width;
         if col_wrap {
             let last_cell = self
                 .grid()
                 .drawing_cell(crate::grid::Pos {
                     row: pos.row,
-                    col: size.cols - 1,
+                    col: size.cols() - 1,
                 })
                 // pos.row is valid, since it comes directly from
                 // self.grid().pos() which we assume to always have a valid row
@@ -866,7 +865,7 @@ impl Screen {
                         .grid_mut()
                         .drawing_cell_mut(crate::grid::Pos {
                             row: pos.row - 1,
-                            col: size.cols - 1,
+                            col: size.cols() - 1,
                         })
                         // pos.row is valid, since it comes directly from
                         // self.grid().pos() which we assume to always have a
@@ -879,7 +878,7 @@ impl Screen {
                             .grid_mut()
                             .drawing_cell_mut(crate::grid::Pos {
                                 row: pos.row - 1,
-                                col: size.cols - 2,
+                                col: size.cols() - 2,
                             })
                             // pos.row is valid, since it comes directly from
                             // self.grid().pos() which we assume to always have
@@ -992,7 +991,7 @@ impl Screen {
                         // have the second half of the wide character after it.
                         .unwrap();
                     next_next_cell.clear(attrs);
-                    if next_next_pos.col == size.cols - 1 {
+                    if next_next_pos.col == size.cols() - 1 {
                         self.grid_mut()
                             .drawing_row_mut(pos.row)
                             // we assume self.grid().pos().row is always valid
