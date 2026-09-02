@@ -769,11 +769,14 @@ impl Screen {
             // don't even try to draw control characters
             return None;
         }
+
+        // Most characters have width 0, 1, or 2. This crate does not have
+        // support for characters with width 3 or above -- we render every
+        // character that has width greater than 1 in exactly 2 columns. Clamp
+        // the character width to 2 so we're at least consistent with how we'll
+        // render the character.
         let width = width
-            .unwrap_or(1)
-            .try_into()
-            // width() can only return 0, 1, or 2
-            .unwrap();
+            .map_or(1, |w| u16::try_from(w).unwrap_or(u16::MAX).clamp(0, 2));
 
         // if the character is wider than the screen, we can't draw it, so
         // just ignore it
