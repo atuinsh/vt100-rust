@@ -1,75 +1,146 @@
 name: tests
+
 on:
   push:
     branches: [main]
-  pull_request: {}
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
+  CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
+
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build --all-targets
-  build-musl:
-    runs-on: ubuntu-latest
-    steps:
-      - run: sudo apt-get install clang-18
-      - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: x86_64-unknown-linux-musl
-      - run: TARGET_CC=clang-18 TARGET_AR=llvm-ar-18 cargo build --all-targets --target x86_64-unknown-linux-musl
-  build-macos:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build --all-targets
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
     steps:
-      - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo test
-  test-musl:
-    runs-on: ubuntu-latest
-    steps:
-      - run: sudo apt-get install clang-18
-      - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@v7
+
+      - name: Install rust
+        uses: dtolnay/rust-toolchain@master
         with:
-          targets: x86_64-unknown-linux-musl
-      - run: TARGET_CC=clang-18 TARGET_AR=llvm-ar-18 cargo test --target x86_64-unknown-linux-musl
-  test-macos:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo test
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
+          toolchain: 1.98.0
+
+      - uses: taiki-e/install-action@v2
+        name: Install nextest
         with:
-          components: clippy, rustfmt
-      - run: cargo install --locked --debug cargo-deny
-      - run: cargo clippy --all-targets -- -Dwarnings
-      - run: cargo fmt --check
-      - run: cargo deny check
-  doc:
+          tool: cargo-nextest
+
+      - uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-debug-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run tests
+        run: cargo nextest run --all-targets
+
+      # nextest does not run doctests
+      - name: Run doctests
+        run: cargo test --doc
+
+  clippy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo doc
+      - uses: actions/checkout@v7
+
+      - name: Install rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.98.0
+          components: clippy
+
+      - uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-debug-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Run clippy (tests and examples)
+        run: cargo clippy --all-targets --tests --examples -- -D warnings
+
+  format:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.98.0
+          components: rustfmt
+
+      - name: Format
+        run: cargo fmt --check
+
+  docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.98.0
+
+      - uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-doc-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run cargo doc
+        run: cargo doc --no-deps
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+      - name: Run cargo doc (private)
+        run: cargo doc --no-deps --document-private-items
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+  deny:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
+
   msrv:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@v7
+
+      - name: Install rust
+        uses: dtolnay/rust-toolchain@master
         with:
+          # keep in sync with `rust-version` in Cargo.toml
           toolchain: 1.70.0
-      - run: cargo check --lib --all-features
+
+      - name: Check with MSRV
+        run: cargo check --all-features
