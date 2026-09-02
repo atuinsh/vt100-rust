@@ -65,6 +65,18 @@ impl<CB: crate::Callbacks> Parser<CB> {
         self.parser.advance(&mut self.screen, bytes);
     }
 
+    /// Resizes the terminal.
+    ///
+    /// Unlike [`Screen::set_size`], this method will call [`on_scroll`] for
+    /// each row that is pushed off the top of the screen's scrollback (in the
+    /// case where the screen is shrinking vertically).
+    ///
+    /// [`Screen::set_size`]: crate::Screen::set_size
+    /// [`on_scroll`]: crate::Callbacks::on_scroll
+    pub fn set_size(&mut self, rows: NonZeroU16, cols: NonZeroU16) {
+        self.screen.set_size_with_cb(rows, cols);
+    }
+
     /// Returns a reference to a [`Screen`](crate::Screen) object containing
     /// the terminal state.
     #[must_use]
