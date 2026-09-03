@@ -1,5 +1,51 @@
 # Changelog
 
+## [0.18.0] - 2026-09-02
+
+### Fixed
+
+* Fixed handling of triple-width Unicode characters (U+17D8). The emulator
+  always renders wide characters in exactly two cells, but the raw Unicode
+  width was used for certain calculations, which produced inconsistent results.
+  Now the calculations used the actual number of cells that the character will
+  take up. It may be worth adding true support for triple-width characters in
+  the future, but this fix at least makes the current behavior consistent.
+* `Screen::set_size` only clears each row's `wrapped` when the screen width
+  changes. Previously, it would unconditionally clear that flag.
+
+### Changed
+
+* `Screen::size` now returns `NonZeroU16`s.
+
+* `Screen::set_size` resets the scroll region and scrollback offset when the
+  size changes, matching the behavior of xterm.
+
+* `Screen::set_size` has different behavior when the screen height changes.
+  Previously, it would discard rows from or add rows to the bottom as needed,
+  but this does not match most terminal emulators.
+
+  Now, when the height is decreased, `set_size` discards rows from the bottom
+  only until the cursor is at the bottom. Then, it pushes excess rows from the
+  top of the screen into scrollback.
+
+  When the height is increased, `set_size` pulls rows from scrollback into the
+  top of the screen. If scrollback is exhausted and the new height hasn't been
+  reached yet, blank rows are added to the bottom.
+
+### Added
+
+* `Parser::set_size`, which is like `Screen::set_size` but calls the
+  `on_scroll` callback when a row is pushed off the top of scrollback (which is
+  now possible due to the other `set_size` changes).
+* `capture::basic_formatted_to_plain`, which converts a basic formatted capture
+  (as returned by `Screen::contents_formatted_basic`) into a plain text one
+  without allocating.
+* `capture::basic_formatted_rows`, which splits a basic formatted capture into
+  individual rows without allocating.
+* `Parser::screen_and_callbacks_mut`, which returns mutable references to both
+  the screen and callbacks object at once. This was not possible with the
+  existing methods.
+
 ## [0.17.1] - 2026-08-28
 
 ### Fixed
@@ -37,6 +83,7 @@ crate.
 * `Parser::new` and `Screen::set_size` now take `NonZeroU16`s instead of
   `u16`s. Passing 0 for `rows` or `cols` was not supported and resulted in
   panics.
+
 * The following methods of `Screen` now return/yield strings rather than byte
   vectors:
 
