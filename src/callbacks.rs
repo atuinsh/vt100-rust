@@ -70,8 +70,8 @@ pub trait Callbacks {
     /// Called when the top row of scrollback is discarded because a new row
     /// was added at the bottom of the screen.
     ///
-    /// If the parser's `scrollback_len` is 0, this will be called when the top
-    /// row of the screen is pushed off instead.
+    /// If the parser's `scrollback_capacity` is 0, this will be called when
+    /// the top row of the screen is pushed off instead.
     ///
     /// Note that this callback can be called by [`Parser::set_size`]:
     /// shrinking the terminal's height can cause rows to be pushed off
