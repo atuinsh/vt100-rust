@@ -122,11 +122,15 @@ impl Row {
     }
 
     pub fn resize(&mut self, len: u16, cell: crate::Cell) {
-        if usize::from(len) < self.cells.len() {
-            self.truncate(len);
-        } else {
-            self.cells.resize(usize::from(len), cell);
-            self.wrapped = false;
+        match usize::from(len).cmp(&self.cells.len()) {
+            std::cmp::Ordering::Equal => {}
+            std::cmp::Ordering::Less => {
+                self.truncate(len);
+            }
+            std::cmp::Ordering::Greater => {
+                self.cells.resize(len.into(), cell);
+                self.wrapped = false;
+            }
         }
     }
 
