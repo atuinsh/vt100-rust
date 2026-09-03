@@ -88,32 +88,8 @@ impl Screen {
 
     /// Resizes the screen **without calling** the [`on_scroll`] callback.
     ///
-    /// This will *not* call [`on_scroll`] for rows that are pushed off the top
-    /// of the screen's scrollback. If you want that, use [`Parser::set_size`].
-    ///
-    /// When the screen height is decreased, this function does the following:
-    ///
-    /// * If the cursor is not at the bottom of the screen, rows from the
-    ///   bottom are discarded until the cursor is at the bottom (or until the
-    ///   desired height is reached, whichever is earlier).
-    /// * If the screen is still too tall after that, rows from the top of the
-    ///   screen are pushed into scrollback. If this would cause scrollback to
-    ///   exceed the maximum size, rows from the top of scrollback are
-    ///   discarded, and the [`on_scroll`] callback is called for each of them.
-    ///
-    /// When the screen height is increased, this function does the following:
-    ///
-    /// * Rows from the bottom of scrollback are pushed to the top of the
-    ///   screen and removed from scrollback, until the desired height is
-    ///   reached.
-    /// * If scrollback is emptied but the screen is still too short, blank
-    ///   rows are added to the bottom of the screen until the desired height
-    ///   is reached.
-    ///
-    /// When the screen width is changed, each row is naively truncated or
-    /// extended with blank cells as necessary. This does not match the
-    /// behavior of most terminals and may be changed in a future
-    /// SemVer-incompatible version.
+    /// This method behaves the same as [`Parser::set_size`] but does not call
+    /// the [`on_scroll`] callback. If you want that, use [`Parser::set_size`].
     ///
     /// [`on_scroll`]: crate::Callbacks::on_scroll
     /// [`Parser::set_size`]: crate::Parser::set_size
