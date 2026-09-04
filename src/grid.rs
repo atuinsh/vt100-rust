@@ -259,6 +259,16 @@ impl Grid {
     pub fn set_scrollback(&mut self, rows: usize) {
         if let Some(scrollback) = &mut self.scrollback {
             scrollback.offset = rows.min(scrollback.rows.len());
+            let cols = self.size.cols();
+            let scrollback_len = scrollback.rows.len();
+            scrollback
+                .rows
+                .iter_mut()
+                .skip(scrollback_len - scrollback.offset)
+                .take(self.rows.len())
+                .for_each(|row| {
+                    row.grow(cols, crate::cell::Cell::new());
+                });
         }
     }
 
@@ -701,9 +711,10 @@ impl Grid {
             }
 
             scrollback.rows.extend(
-                between[num_reset..num_removed]
-                    .iter_mut()
-                    .map(|row| std::mem::replace(row, new_row())),
+                between[num_reset..num_removed].iter_mut().map(|row| {
+                    row.trim();
+                    std::mem::replace(row, new_row())
+                }),
             );
 
             if scrollback.offset > 0 {

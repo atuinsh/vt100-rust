@@ -18,6 +18,14 @@
   theoretical scrollback length do we start adding blank rows at the bottom.
   This is intended to more closely match the behavior of a real terminal
   emulator that the parser might be emulating.
+* Scrollback uses less memory when lines end with blank cells. Note that there
+  is a technically observable change with `Screen::set_scrollback`: previously,
+  `set_scrollback` could cause the screen to contain rows that were shorter
+  than the screen width, if the screen used to be narrower when those rows were
+  pushed to scrollback; this could be noticed with `Screen::cell`. Now, every
+  row in the screen is always at least the width of the screen. Scrollback rows
+  that are longer than the screen width can still be observed; this change does
+  not truncate them.
 
 ## [0.18.0] - 2026-09-02
 
