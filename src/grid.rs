@@ -256,20 +256,26 @@ impl Grid {
         self.scrollback.as_ref().map_or(0, |s| s.offset)
     }
 
+    /// Ensures every visible row of scrollback is at least the width of the
+    /// screen.
+    fn grow_visible_scrollback(scrollback: &mut ScrollbackState, size: Size) {
+        let scrollback_len = scrollback.rows.len();
+        scrollback
+            .rows
+            .iter_mut()
+            .skip(scrollback_len - scrollback.offset)
+            .take(size.rows().into())
+            .for_each(|row| {
+                row.grow(size.cols(), crate::cell::Cell::new());
+            });
+    }
+
     pub fn set_scrollback(&mut self, rows: usize) {
-        if let Some(scrollback) = &mut self.scrollback {
-            scrollback.offset = rows.min(scrollback.rows.len());
-            let cols = self.size.cols();
-            let scrollback_len = scrollback.rows.len();
-            scrollback
-                .rows
-                .iter_mut()
-                .skip(scrollback_len - scrollback.offset)
-                .take(self.rows.len())
-                .for_each(|row| {
-                    row.grow(cols, crate::cell::Cell::new());
-                });
-        }
+        let Some(scrollback) = &mut self.scrollback else {
+            return;
+        };
+        scrollback.offset = rows.min(scrollback.rows.len());
+        Self::grow_visible_scrollback(scrollback, self.size);
     }
 
     pub fn write_contents(&self, contents: &mut String) {
@@ -723,6 +729,7 @@ impl Grid {
                     .saturating_add(count)
                     .min(scrollback.rows.len());
             }
+            Self::grow_visible_scrollback(scrollback, self.size);
         } else {
             for row in &mut between[..num_removed] {
                 if scrollback_enabled {
