@@ -280,6 +280,80 @@ fn rows_are_captured_when_they_leave_the_scrollback() {
     assert_eq!(finish(&mut parser), "one\ntwo\nthree\nfour\nfive");
 }
 
+/// `CSI 3 J` discards the scrollback, so its rows are captured on their way
+/// out; otherwise they'd be lost with no way to recover them.
+#[test]
+fn erasing_the_scrollback_captures_its_rows() {
+    let mut parser =
+        helpers::new_with_callbacks(2, 10, 10, Capture::default());
+    parser.process(b"one\r\ntwo\r\nthree\r\nfour");
+    // `one` and `two` are in the scrollback, and nothing has left it yet.
+    assert_eq!(scrolled(&parser), "");
+
+    parser.process(b"\x1b[3J");
+    // The scrollback is gone, but its rows were captured on the way out,
+    // oldest first.
+    assert_eq!(scrolled(&parser), "one\ntwo");
+    // The visible screen is left alone, and isn't captured.
+    assert_eq!(parser.screen().contents(), "three\nfour");
+
+    // Nothing was lost: the capture still reproduces the whole session.
+    assert_eq!(finish(&mut parser), "one\ntwo\nthree\nfour");
+}
+
+/// Erasing the scrollback doesn't capture rows that had already been pushed
+/// out of it, since those were captured when they left.
+#[test]
+fn erasing_the_scrollback_doesnt_capture_rows_twice() {
+    let mut parser =
+        helpers::new_with_callbacks(2, 10, 1, Capture::default());
+    parser.process(b"one\r\ntwo\r\nthree\r\nfour");
+    // `one` was pushed out of the one-row scrollback and captured; `two` is
+    // still in it.
+    assert_eq!(scrolled(&parser), "one");
+
+    parser.process(b"\x1b[3J");
+    assert_eq!(scrolled(&parser), "one\ntwo");
+    assert_eq!(finish(&mut parser), "one\ntwo\nthree\nfour");
+}
+
+/// Erasing an empty scrollback captures nothing, and erasing it twice doesn't
+/// capture its rows a second time.
+#[test]
+fn erasing_the_scrollback_twice_captures_its_rows_once() {
+    let mut parser =
+        helpers::new_with_callbacks(2, 10, 10, Capture::default());
+    parser.process(b"one\r\ntwo");
+    // Nothing has scrolled off yet, so the scrollback is empty.
+    parser.process(b"\x1b[3J");
+    assert_eq!(scrolled(&parser), "");
+
+    parser.process(b"\r\nthree\x1b[3J");
+    assert_eq!(scrolled(&parser), "one");
+    parser.process(b"\x1b[3J");
+    assert_eq!(scrolled(&parser), "one");
+    assert_eq!(finish(&mut parser), "one\ntwo\nthree");
+}
+
+/// `CSI 3 J` on the alternate screen captures nothing, because the alternate
+/// screen has no scrollback, and it leaves the main screen's scrollback
+/// alone.
+#[test]
+fn erasing_the_scrollback_on_the_alternate_screen_captures_nothing() {
+    let mut parser =
+        helpers::new_with_callbacks(2, 10, 10, Capture::default());
+    parser.process(b"one\r\ntwo\r\nthree\r\nfour");
+    parser.process(b"\x1b[?1049h\x1b[3J\x1b[?1049l");
+    assert_eq!(scrolled(&parser), "");
+    assert!(parser.callbacks().alternate.is_empty());
+
+    // The main screen's scrollback still holds `one` and `two`, so erasing it
+    // there still captures them.
+    parser.process(b"\x1b[3J");
+    assert_eq!(scrolled(&parser), "one\ntwo");
+    assert_eq!(finish(&mut parser), "one\ntwo\nthree\nfour");
+}
+
 /// Shrinking the screen with [`vt100::Parser::set_size`] captures the rows
 /// that get pushed out of the scrollback as a result.
 #[test]
