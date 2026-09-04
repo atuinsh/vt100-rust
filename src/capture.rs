@@ -98,8 +98,8 @@ pub struct BasicFormattedToPlainIndexed<'a> {
 }
 
 impl<'a> Iterator for BasicFormattedToPlainIndexed<'a> {
-    /// The first element is the index within the original capture of the plain
-    /// substring; the second element is the plain substring itself.
+    /// The first element is the byte index within the original capture of the
+    /// plain substring; the second element is the plain substring itself.
     type Item = (usize, &'a str);
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -159,8 +159,8 @@ pub fn basic_formatted_to_plain(capture: &str) -> BasicFormattedToPlain<'_> {
 /// each substring.
 ///
 /// The iterator returned by this function yields `(index, string)` tuples,
-/// where `string` is the plain-text substring, and `index` is the index of
-/// `string` within `capture`.
+/// where `string` is the plain-text substring, and `index` is the byte index
+/// of `string` within `capture`.
 ///
 /// # Example
 ///
