@@ -69,13 +69,21 @@ pub struct Screen {
 impl Screen {
     pub(crate) fn new(
         size: crate::grid::Size,
-        scrollback_len: usize,
+        scrollback_capacity: usize,
     ) -> Self {
-        let mut grid = crate::grid::Grid::new(size, scrollback_len);
+        let mut grid = crate::grid::Grid::new(
+            size,
+            crate::grid::Scrollback::Enabled {
+                capacity: scrollback_capacity,
+            },
+        );
         grid.allocate_rows();
         Self {
             grid,
-            alternate_grid: crate::grid::Grid::new(size, 0),
+            alternate_grid: crate::grid::Grid::new(
+                size,
+                crate::grid::Scrollback::Disabled,
+            ),
 
             attrs: crate::attrs::Attrs::default(),
             saved_attrs: crate::attrs::Attrs::default(),
@@ -1147,7 +1155,7 @@ impl<CB: crate::Callbacks> WrappedScreen<CB> {
     pub fn ris(&mut self) {
         self.screen = Screen::new(
             self.screen.grid.size(),
-            self.screen.grid.scrollback_len(),
+            self.screen.grid.scrollback_capacity(),
         );
     }
 
@@ -1210,6 +1218,10 @@ impl<CB: crate::Callbacks> WrappedScreen<CB> {
             0 => self.screen.grid_mut().erase_all_forward(attrs),
             1 => self.screen.grid_mut().erase_all_backward(attrs),
             2 => self.screen.grid_mut().erase_all(attrs),
+            3 => {
+                let on_row = Self::on_row(&self.screen, &mut self.callbacks);
+                self.screen.grid_mut().erase_all_scrollback(on_row);
+            }
             _ => unhandled(self),
         }
     }

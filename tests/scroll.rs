@@ -191,6 +191,51 @@ fn scrollback_larger_than_rows() {
     assert_eq!(parser.screen().contents(), gen_nums(1..=3, "\n"));
 }
 
+/// `CSI 3 J` clears the scrollback buffer, leaving the visible screen alone.
+#[test]
+fn erase_scrollback() {
+    let mut parser = helpers::new(3, 10, 10);
+    parser.process(b"1\r\n2\r\n3\r\n4\r\n5\r\n6");
+    parser.screen_mut().set_scrollback(3);
+    assert_eq!(parser.screen().contents(), "1\n2\n3");
+
+    parser.process(b"\x1b[3J");
+    // The rows the offset pointed at are gone, so the screen scrolls back
+    // down to the bottom and can't scroll up again.
+    assert_eq!(parser.screen().scrollback(), 0);
+    assert_eq!(parser.screen().contents(), "4\n5\n6");
+    parser.screen_mut().set_scrollback(3);
+    assert_eq!(parser.screen().scrollback(), 0);
+    assert_eq!(parser.screen().contents(), "4\n5\n6");
+
+    // Rows that scroll off afterwards still go into the scrollback.
+    parser.process(b"\r\n7");
+    parser.screen_mut().set_scrollback(1);
+    assert_eq!(parser.screen().contents(), "4\n5\n6");
+}
+
+/// `CSI 3 J` also discards the rows that `Screen::set_size` would otherwise
+/// pull back onto the screen.
+#[test]
+fn erase_scrollback_then_grow() {
+    let mut parser = helpers::new(3, 10, 10);
+    parser.process(b"1\r\n2\r\n3\r\n4\r\n5\r\n6\x1b[3J");
+    helpers::set_size(parser.screen_mut(), 6, 10);
+    assert_eq!(parser.screen().contents(), "4\n5\n6");
+    assert_eq!(parser.screen().cursor_position(), (2, 1));
+}
+
+/// `CSI 3 J` on the alternate screen does nothing, since it has no
+/// scrollback.
+#[test]
+fn erase_scrollback_on_the_alternate_screen() {
+    let mut parser = helpers::new(3, 10, 10);
+    parser.process(b"1\r\n2\r\n3\r\n4\r\n5\r\n6");
+    parser.process(b"\x1b[?1049h\x1b[3J\x1b[?1049l");
+    parser.screen_mut().set_scrollback(3);
+    assert_eq!(parser.screen().contents(), "1\n2\n3");
+}
+
 #[cfg(test)]
 fn gen_nums(range: RangeInclusive<u8>, join: &str) -> String {
     range
