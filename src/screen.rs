@@ -1218,7 +1218,10 @@ impl<CB: crate::Callbacks> WrappedScreen<CB> {
             0 => self.screen.grid_mut().erase_all_forward(attrs),
             1 => self.screen.grid_mut().erase_all_backward(attrs),
             2 => self.screen.grid_mut().erase_all(attrs),
-            3 => self.screen.grid_mut().erase_all_scrollback(),
+            3 => {
+                let on_row = Self::on_row(&self.screen, &mut self.callbacks);
+                self.screen.grid_mut().erase_all_scrollback(on_row);
+            }
             _ => unhandled(self),
         }
     }

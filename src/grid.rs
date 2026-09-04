@@ -567,9 +567,14 @@ impl Grid {
         self.erase_row_backward(attrs);
     }
 
-    pub fn erase_all_scrollback(&mut self) {
+    pub fn erase_all_scrollback<F>(&mut self, mut on_row: F)
+    where
+        F: FnMut(&crate::row::Row),
+    {
         if let Some(scrollback) = &mut self.scrollback {
-            scrollback.rows.clear();
+            for row in scrollback.rows.drain(..) {
+                on_row(&row);
+            }
             scrollback.unbounded_len = 0;
             scrollback.offset = 0;
         }
