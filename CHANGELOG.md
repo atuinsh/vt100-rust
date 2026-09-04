@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.19.0] - (unreleased)
+## [0.19.0] - 2026-09-03
 
 ### Added
 
@@ -18,6 +18,7 @@
   theoretical scrollback length do we start adding blank rows at the bottom.
   This is intended to more closely match the behavior of a real terminal
   emulator that the parser might be emulating.
+
 * Scrollback uses less memory when lines end with blank cells. Note that there
   is a technically observable change with `Screen::set_scrollback`: previously,
   `set_scrollback` could cause the screen to contain rows that were shorter
