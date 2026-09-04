@@ -76,7 +76,7 @@ impl RowContents<'_> {
     }
 }
 
-/// Iterator returned by [`basic_formatted_to_plain_indexed`].
+/// Iterator returned by [`basic_formatted_to_plain`].
 pub struct BasicFormattedToPlain<'a> {
     indexed: BasicFormattedToPlainIndexed<'a>,
 }
