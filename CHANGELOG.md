@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.19.0] - 2026-09-03
+
+### Added
+
+* Added support for `CSI 3 J`, which clears the scrollback buffer.
+
+### Changed
+
+* Changed the behavior of `Parser::set_size` and `Screen::set_size` when the
+  screen height is increased. Now, the parser tracks how many rows of
+  scrollback we *would* have if the scrollback capacity were unbounded; rows
+  are inserted at the top of the screen until we reach this theoretical number
+  rather than the actual length of the scrollback buffer. If we exhaust the
+  scrollback buffer but haven't reached the theoretical length yet, we keep
+  adding rows at the top but just make them blank. Only after we reach the
+  theoretical scrollback length do we start adding blank rows at the bottom.
+  This is intended to more closely match the behavior of a real terminal
+  emulator that the parser might be emulating.
+
 ## [0.18.0] - 2026-09-02
 
 ### Fixed
