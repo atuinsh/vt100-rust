@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.19.1] - (unreleased)
+
+### Added
+
+* `capture::basic_formatted_to_plain_indexed`, which is like
+  `capture::basic_formatted_to_plain`, but also includes the original index
+  of each plain text substring.
+
 ## [0.19.0] - 2026-09-03
 
 ### Added
