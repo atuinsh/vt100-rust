@@ -715,3 +715,29 @@ fn rows_of_a_capture_match_a_tall_screen_for_every_screen_width() {
         assert_eq!(rows, tall_rows(30, cols, data), "{cols} cols");
     }
 }
+
+#[derive(Default)]
+struct Owned(Vec<RowContents<'static>>);
+
+impl vt100::Callbacks for Owned {
+    fn on_scroll(&mut self, contents: RowContents<'_>, _: bool) {
+        self.0.push(contents.into_owned());
+    }
+}
+
+#[test]
+fn into_owned_formats_like_the_borrowed_row() {
+    let input = b"\x1b[32m1\r\n2\x1b[0m\r\n3\r\n\x1b[1m4\r\n5";
+    let mut borrowed = parser(2, 10);
+    borrowed.process(input);
+    let mut owned = helpers::new_with_callbacks(2, 10, 0, Owned::default());
+    owned.process(input);
+
+    let mut state = BasicFormattedCaptureState::new();
+    let mut buf = String::new();
+    for row in &owned.callbacks().0 {
+        row.write_formatted_basic(&mut buf, &mut state).unwrap();
+    }
+
+    assert_eq!(buf, scrolled(&borrowed));
+}

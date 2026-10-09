@@ -1,5 +1,7 @@
 //! Types related to capturing terminal data.
 
+use std::borrow::Cow;
+
 #[cfg(doc)]
 use crate::Screen;
 
@@ -51,9 +53,14 @@ impl BasicFormattedCaptureState {
 /// This type is used by [`Callbacks::on_scroll`][on_scroll].
 ///
 /// [on_scroll]: crate::Callbacks::on_scroll
-pub struct RowContents<'a>(pub(crate) &'a crate::row::Row);
+pub struct RowContents<'a>(pub(crate) Cow<'a, crate::row::Row>);
 
 impl RowContents<'_> {
+    #[must_use]
+    pub fn into_owned(self) -> RowContents<'static> {
+        RowContents(Cow::Owned(self.0.into_owned()))
+    }
+
     /// Writes the contents of the row to the provided buffer, in the same
     /// format as [`Screen::contents_formatted_basic`].
     ///
