@@ -1060,7 +1060,12 @@ impl<CB: crate::Callbacks> WrappedScreen<CB> {
         callbacks: &'cb mut CB,
     ) -> impl FnMut(&crate::row::Row) + 'cb {
         let is_alternate = screen.mode(MODE_ALTERNATE_SCREEN);
-        move |row| callbacks.on_scroll(RowContents(row), is_alternate)
+        move |row| {
+            callbacks.on_scroll(
+                RowContents(std::borrow::Cow::Borrowed(row)),
+                is_alternate,
+            );
+        }
     }
 
     /// Resizes the screen, calling [`on_scroll`] for each row that is pushed
@@ -1072,12 +1077,18 @@ impl<CB: crate::Callbacks> WrappedScreen<CB> {
         self.screen
             .grid
             .set_size(crate::grid::Size { rows, cols }, |row| {
-                callbacks.on_scroll(RowContents(row), false);
+                callbacks.on_scroll(
+                    RowContents(std::borrow::Cow::Borrowed(row)),
+                    false,
+                );
             });
         self.screen.alternate_grid.set_size(
             crate::grid::Size { rows, cols },
             |row| {
-                callbacks.on_scroll(RowContents(row), true);
+                callbacks.on_scroll(
+                    RowContents(std::borrow::Cow::Borrowed(row)),
+                    true,
+                );
             },
         );
     }

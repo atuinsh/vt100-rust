@@ -341,8 +341,10 @@ impl Grid {
             writer: &mut impl std::fmt::Write,
             state: &mut crate::capture::BasicFormattedCaptureState,
         ) -> std::fmt::Result {
-            rows.map(crate::capture::RowContents)
-                .try_for_each(|row| row.write_formatted_basic(writer, state))
+            rows.map(|row| {
+                crate::capture::RowContents(std::borrow::Cow::Borrowed(row))
+            })
+            .try_for_each(|row| row.write_formatted_basic(writer, state))
         }
         match range {
             crate::capture::BasicFormattedCaptureRange::Full(state) => {
