@@ -13,6 +13,7 @@ yanked = "deny"
 [bans]
 multiple-versions = "deny"
 wildcards = "deny"
+deny = [{ crate = "vte", use-instead = "atuin-vte" }]
 
 [licenses]
 version = 2

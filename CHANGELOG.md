@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.19.2] - (unreleased)
+
+### Changed
+
+* Switched the `vte` dependency to `atuin-vte`, Atuin's fork of `vte`.
+
 ## [0.19.1] - 2026-09-04
 
 ### Added
