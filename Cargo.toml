@@ -20,7 +20,7 @@ name = "vt100"
 itoa = "1.0.15"
 unicode-width = "0.2.1"
 # Atuin's fork of vte, renamed so the source keeps using `vte::` paths.
-vte = { package = "atuin-vte", version = "0.15.0" }
+vte = { package = "atuin-vte", version = "0.15.1" }
 
 [dev-dependencies]
 quickcheck = "1.0"
