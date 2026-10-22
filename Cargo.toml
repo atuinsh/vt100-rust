@@ -1,6 +1,6 @@
 [package]
 name = "atuin-vt100"
-version = "0.19.1"
+version = "0.19.2"
 edition = "2021"
 rust-version = "1.70"
 
@@ -19,7 +19,8 @@ name = "vt100"
 [dependencies]
 itoa = "1.0.15"
 unicode-width = "0.2.1"
-vte = "0.15.0"
+# Atuin's fork of vte, renamed so the source keeps using `vte::` paths.
+vte = { package = "atuin-vte", version = "0.15.1" }
 
 [dev-dependencies]
 quickcheck = "1.0"
